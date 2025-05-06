@@ -254,7 +254,7 @@ mysql_common_start()
     while [ $start_wait = 1 ]; do
         if ! ps $pid > /dev/null 2>&1; then
             wait $pid
-            ocf_exit_reason "MySQL server failed to start (pid=$pid) (rc=$?), please check your installation"
+            ocf_exit_reason "MySQL server failed to start (pid=$pid) (rc=$?). Check $OCF_RESKEY_log for details"
             return $OCF_ERR_GENERIC
         fi
         mysql_common_status info
@@ -318,6 +318,10 @@ mysql_common_stop()
     if [ $? != $OCF_NOT_RUNNING ]; then
         ocf_log info "MySQL failed to stop after ${shutdown_timeout}s using SIGTERM. Trying SIGKILL..."
         /bin/kill -KILL $pid > /dev/null
+        mysql_common_status info $pid
+        if [ $? != $OCF_NOT_RUNNING ]; then
+            return $OCF_ERR_GENERIC
+        fi
     fi
 
     ocf_log info "MySQL stopped";

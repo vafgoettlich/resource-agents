@@ -284,7 +284,7 @@ docker_simple_status()
 	local val
 
 	if [ ! -x "$(command -v docker)" ]; then 
-		ocf_log err "docker is not installed on this host"
+		ocf_exit_reason "docker is not installed on this host"
 		return $OCF_ERR_INSTALLED
 	fi
 
@@ -293,8 +293,8 @@ docker_simple_status()
 	VERSION_OUT=$(docker version)
 	version_ret=$?
 	if [ $version_ret -eq 1 ]; then
-		ocf_exit_reason "Docker service is in error state while checking for ${CONTAINER}, based on image, ${OCF_RESKEY_image}: ${VERSION_OUT}"
-		return $OCF_ERR_GENERIC
+		ocf_log err "Docker service is not running or in error state while checking for ${CONTAINER}, based on image, ${OCF_RESKEY_image}: ${VERSION_OUT}"
+		return $OCF_NOT_RUNNING
 	fi
 
 	container_exists
@@ -512,7 +512,7 @@ image_exists()
 	# - image
 	# - repository:port/image
 	# - docker.io/image (some distro will display "docker.io/" as prefix)
-	docker images | awk '{print $1 ":" $2}' | egrep -q -s "^(docker.io\/|${SERVER_NAME}\/)?${IMAGE_NAME}:${IMAGE_TAG}\$"
+	docker images | awk '{print $1 ":" $2}' | $EGREP -q -s "^(docker.io\/|${SERVER_NAME}\/)?${IMAGE_NAME}:${IMAGE_TAG}\$"
 	if [ $? -eq 0 ]; then
 		# image found
 		return 0

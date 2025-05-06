@@ -171,7 +171,7 @@ Address:port of the remote (read only) unpromoted-server (default: ).
 <parameter name="proxy_address" unique="0" required="0">
 <longdesc lang="en">
 Listening address:port of the proxy server (default: :4040).
-You can also specify a socket like "/tmp/mysql-proxy.sock".
+You can also specify a socket like "/var/run/mysql-proxy.sock".
 </longdesc>
 <shortdesc lang="en">MySQL Proxy listening address</shortdesc>
 <content type="string" default="${OCF_RESKEY_proxy_address_default}" />
@@ -572,7 +572,7 @@ mysqlproxy_validate_all()
     fi
 
     # check for valid log-level
-    echo $log_level | egrep -q "^(error|warning|info|message|debug|)$"
+    echo $log_level | $EGREP -q "^(error|warning|info|message|debug|)$"
     if [ $? -ne 0 ]; then
         ocf_log err "MySQL Proxy log level '$log_level' not in valid range error|warning|info|message|debug"
         return $OCF_ERR_CONFIGURED

@@ -7,12 +7,12 @@
 # modify it under the terms of the GNU General Public License
 # as published by the Free Software Foundation; either version 2
 # of the License, or (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
@@ -42,7 +42,7 @@ radir			= $(abs_top_builddir)/heartbeat
 # required for out-of-tree build
 symlinkstargets		= \
 			  ocf-distro ocf.py ocf-rarun ocf-returncodes \
-			  findif.sh apache-conf.sh http-mon.sh mysql-common.sh \
+			  findif.sh apache-conf.sh aws.sh http-mon.sh mysql-common.sh \
 			  nfsserver-redhat.sh openstack-common.sh ora-common.sh
 
 preptree:
@@ -147,6 +147,7 @@ man_MANS                = ocf_heartbeat_AoEtarget.7 \
                           ocf_heartbeat_iSCSILogicalUnit.7 \
                           ocf_heartbeat_iSCSITarget.7 \
                           ocf_heartbeat_iface-bridge.7 \
+                          ocf_heartbeat_iface-macvlan.7 \
                           ocf_heartbeat_iface-vlan.7 \
                           ocf_heartbeat_ipsec.7 \
                           ocf_heartbeat_ids.7 \
@@ -180,11 +181,13 @@ man_MANS                = ocf_heartbeat_AoEtarget.7 \
                           ocf_heartbeat_oraasm.7 \
                           ocf_heartbeat_oracle.7 \
                           ocf_heartbeat_oralsnr.7 \
+                          ocf_heartbeat_osceip.7 \
                           ocf_heartbeat_ovsmonitor.7 \
                           ocf_heartbeat_pgagent.7 \
                           ocf_heartbeat_pgsql.7 \
                           ocf_heartbeat_pingd.7 \
                           ocf_heartbeat_podman.7 \
+                          ocf_heartbeat_podman-etcd.7 \
                           ocf_heartbeat_portblock.7 \
                           ocf_heartbeat_postfix.7 \
                           ocf_heartbeat_pound.7 \
@@ -233,6 +236,18 @@ endif
 
 if BUILD_GCP_VPC_MOVE_VIP
 man_MANS           	+= ocf_heartbeat_gcp-vpc-move-vip.7
+endif
+
+if BUILD_POWERVS_SUBNET
+man_MANS           	+= ocf_heartbeat_powervs-subnet.7
+endif
+
+if BUILD_IBM_CLOUD_VPC_MOVE_ROUTE
+man_MANS           	+= ocf_heartbeat_ibm-cloud-vpc-cr-vip.7
+endif
+
+if BUILD_IBM_CLOUD_VPC_MOVE_FIP
+man_MANS           	+= ocf_heartbeat_ibm-cloud-vpc-move-fip.7
 endif
 
 xmlfiles		= $(man_MANS:.7=.xml)

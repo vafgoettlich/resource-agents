@@ -1,3 +1,194 @@
+* Wed Nov  6 2024 resource-agents contributors
+- stable release 4.16.0
+
+* Wed Oct 30 2024 resource-agents contributors
+- release candidate 4.16.0 rc1
+- ocf-shellfuncs: only create/update and reload systemd drop-in if needed
+- spec: drop BuildReq python3-pyroute2 for RHEL/CentOS
+- Filesystem: dont sleep during stop-action when there are no processes to kill
+- Filesystem: on stop, try umount directly, before scanning for users
+- Filesystem: only use $umount_force after sending kill_signals
+- Filesystem: stop/get_pids: improve logic to find processes
+- Filesystem: add azure aznfs filesystem support
+- IPaddr2: add proto-parameter to be able to match a specific route
+- IPaddr2: improve fail logic and check ip_status after adding IP
+- IPaddr2: use dev keyword when bringing up device
+- IPsrcaddr: specify dev for default route, as e.g. fe80:: routes can be present on multiple interfaces
+- apache/http-mon.sh: change curl opts to match wget
+- azure-events*: use node name from cluster instead of hostname to avoid failing if they're not the same
+- docker-compose: use "docker compose" when not using older docker-compose command
+- findif.sh: ignore unreachable, blackhole, and prohibit routes
+- nfsserver: also stop rpc-statd for nfsv4_only to avoid stop failing in some cases
+- podman: force-remove containers in stopping state if necessary (#1973)
+- powervs-subnet: add optional argument route_table (#1966)
+- powervs-subnet: modify gathering of Apikey, calculation of timeout
+- powervs-subnet: enable access via private endpoint for IBM IAM
+
+* Fri Jul 26 2024 resource-agents contributors
+- stable release 4.15.1
+- IPaddr2: dont fail with "IPv4 does not support lvs_ipv6_addrlabel"
+  error, as the parameter is not used in IPv4 scenarioes
+
+* Wed Jul 24 2024 resource-agents contributors
+- stable release 4.15.0
+- build: dont build powervs-subnet if dependencies are missing
+- spec: use /usr/sbin paths for Fedora 41+
+
+* Wed Jul 17 2024 resource-agents contributors
+- release candidate 4.15.0 rc1
+- outscale: new resource agent (#1938)
+- powervs-subnet: new resource agent (#1948)
+- configure: fix enable_ansi check
+- ocf-shellfuncs: add curl_retry()
+- ocf-shellfuncs: dont use deprecated validate-with="none" in CIB
+- ocf-shellfuncs: fix version regex in ocf_local_nodename()
+- ocf-shellfuncs: ocf_run(): add debug level error logging
+- findif.sh: add metric for IPv6 support and fail when matching more than 1 route
+- AWS agents: use curl_retry() for metadata requests
+- Filesystem: fail when incorrect device mounted on mountpoint, and dont unmount the mountpoint in this case, or if mountpoint set to "/"
+- Filesystem: fail when leading or trailing whitespace is present in device or directory parameters
+- Filesystem: return success during stop-action when leading or trailing whitespace is present in device or directory parameters
+- Filesystem: silence "Expected /dev/... to exist" message for probe-action
+- Filesystem: use fuser -Mm (was -m) to avoid killing unrelated processes
+- Filesystem: use fuser -c on FreeBSD, as -m and -M are used for other functionality
+- IPaddr2: change default for lvs_ipv6_addrlabel to true to avoid last added IP becoming src IP
+- IPaddr2: use metric for IPv6
+- IPsrcaddr: add IPv6 support
+- apache/http-mon.sh: dont use -L for wget2 as it's not implemented yet
+- apache/http-mon.sh: prefer curl due to new wget2 issues, including not being able to resolve hostnames from /etc/hosts
+- azure-events-az: update to API versions, add retry functionality for metadata requests, update tests
+- azure-lb: fix issue where disabled IPv6 made it fail when using socat after adding IPv6 (#1939)
+- conntrackd/galera/rabbitmq-cluster: avoid deprecated tool options
+- galera/mariadb/mysql/redis: remove Unpromoted monitor-action, as it's covered by the regular monitor-action
+- pgsql: pgsql_status: silence expected "ERROR: command failed: runuser ..." messages
+- send_arp.libnet: use calloc() to avoid truncating pidfilename if it is more than 64 chars long
+- storage-mon: add logging to daemon mode.
+
+* Wed Apr 24 2024 resource-agents contributors
+- stable release 4.14.0
+- doc: writing-python-agents: add description of is_probe() and distro()
+
+* Wed Apr 17 2024 resource-agents contributors
+- release candidate 4.14.0 rc1
+- all agents: remove -S state/status that are either ignored, or give an error message in newer versions of Pacemaker
+- configure: fix "C preprocessor "gcc -E" fails sanity check" error caused by autoconf 2.72
+- configure: prepare to not build with -ansi by default in the future
+- docs: writing-python-agents: update required Python version to 3.6+
+- spec: use /usr/sbin paths for Fedora 40+
+- LVM-activate: avoid false positive for VG activation (fail when system_id_source and volume_list are set)
+- aws-vpc-move-ip/aws-vpc-route53/awseip/awsvip: add auth_type parameter and AWS Policy based authentication type
+- azure-lb: support IPv6 with Azure load balancer when using socat
+- db2: fix OCF_SUCESS typo in db2_notify
+- docker: return OCF_NOT_RUNNING when Docker isn't running
+- findif.sh: fix corner cases
+- findif.sh: fix loopback handling
+- findif: check that netmaskbits != EOS in addition to != NULL in all cases
+- galera: allow joiner to report non-Primary during initial IST
+- nfsserver: fix "server scope" functionality for both potentially other dropins AND multiple ExecStart
+- ocivip: fix PRIMARY_IFACE variable when it returns two lines
+- openstack-info: ensure no newlines in openstack_ports
+- portblock: accept numeric protocol from iptables (to fix regression in iptables 1.8.9 that has shipped in some distros)
+- portblock: remove write to tcp_tw_recycle
+- storage_mon: fix file handler out of scope leak and uninitialized values
+- storage_mon: use memset() to fix "uninitialized value" covscan error, as qb_ipcc_recv() will always set a message
+
+* Wed Oct 11 2023 resource-agents contributors
+- stable release 4.13.0
+- findif.sh: dont use table parameter as it returns no netmask (tested with
+  main/local/custom tables)
+
+* Wed Oct  4 2023 resource-agents contributors
+- release candidate 4.13.0 rc1
+- iSCSILogicalUnit/iSCSITarget: add support for scst
+- Delay: increase stop, status and monitor timeouts to 40s to avoid failing with default values
+- Delay: remove statement about defaulting to "startdelay" value if not specified
+- Filesystem: create systemd drop-in for network filesystems
+- Filesystem: fail if AWS efs-utils not installed when fstype=efs
+- Filesystem: improve stop-action and allow setting term/kill signals and signal_delay for large filesystems
+- Filesystem: list_mounts: fix mount command output parsing
+- IPaddr2/IPsrcaddr: add/modify table parameter to be able to find interface while using policy based routing
+- IPv6addr: expect ping/pong delay
+- LVM-activate: add degraded_activation and majority_pvs parameters to allow failover with missing PVs
+- ZFS: improve volume imported check for newer ZFS releases (#1853)
+- azure-events*: fix for no "Transition Summary" for Pacemaker 2.1+
+- db2: avoid eval with unsanitized values (#1838)
+- ethmonitor: dont log "Interface does not exist" for monitor-action
+- exportfs: make the "fsid=" parameter optional
+- exportfs: move testdir() to start-action to avoid failing during resource creation (validate-all) and make it create the directory if it doesnt exist
+- mysql-common: point to log file when start-action fails (#1887)
+- mysql: fix promotion_score bouncing between ~3600 and 1 on demoted nodes
+- mysql: promotable fixes to avoid nodes getting bounced around by setting -v 1/-v 2, and added OCF_CHECK_LEVEL=10 for promotable resources to be able to distinguish between promoted and not
+- nfsserver: fix "server scope" functionality to live with additional drop-in files
+- nfsserver: prepare the layout for the default /var/lib/nfs if nfs_shared_infodir isnt defined
+- ocf-shellfuncs: Explicitly specify $OCF_RESOURCE_INSTANCE in the -p parameter for compatibility
+- pgsql: dont run promotable and file checks that could be on shared storage during validate-all action
+- postfix: update permission check from su to runuser/su (#1880)
+- spec: Migrate to SPDX license
+- spec: remove JFLAGS logic and use %{_smp_mflags} like we do in other projects
+- storage-mon: add daemon/client mode.
+
+* Wed Jan 25 2023 resource-agents contributors
+- stable release 4.12.0
+
+* Wed Jan 18 2023 resource-agents contributors
+- release candidate 4.12.0 rc1
+- azure-events-az: new resource agent (#1774)
+- iface-macvlan: new resource agent (#1815)
+- configure/spec: remove google-api-client BuildReq as the gcp-agents build fine without it
+- configure: fix bashisms
+- dev-guide: update default branch name
+- ocf-shellfuncs: add ocf_promotion_score() to use crm_attribute -p/crm_master depending on Pacemaker version
+- spec: remove redhat-lsb-core dependency (lsb_release)
+- spec: use cluster-glue-devel for opensuse > 15
+- all agents: update to promotable terms
+- CTDB: change public_addresses validate-all warning to info
+- CTDB: move process to root cgroup if realtime scheduling is enabled
+- Filesystem: improve logic for UUID/label and add note that /dev/disk/by-{uuid,label}/ are preferred on Linux
+- Filesystem: remove validate-all mountpoint warning as it is auto-created during start-action if it doesnt exist
+- IPsrcaddr: detect metric for main table only, and allow specifying metric if necessary
+- IPsrcaddr: fix PROTO regex
+- IPsrcaddr: fix monitor/status for default route not being equal to src IP before start, and change route src correctly in stop-action
+- IPsrcaddr: use scope host when using non-main tables
+- LVM-activate: use correct return codes to ensure correct action when failing
+- SAPInstance: be more resilient against broken kill.sap files (#1825)
+- VirtualDomain: replace error log messages with calls to ocf_exit_reason
+- WAS6: add missing ] to fix trap condition
+- aws-vpc-move-ip: allow to set the interface label
+- dnsupdate: add CNAME support (#1773)
+- docker-compose: fix number of containers/running containers logic
+- docker/podman/zabbixserver: replace error log messages with calls to ocf_exit_reason
+- ethmonitor/ovsmonitor/mariadb: check for bc binary
+- ethmonitor/ovsmonitor/pgsql: remove ignored attrd_updater "-q" parameter
+- exportfs: only grep in rmtab if it exists
+- galera/mariadb/mpathpersist/mysql/pgsql/sg_persist/Stateful: use ocf_promotion_score() to avoid issues with deprecated crm_master
+- galera/mpathpersist/sg_persist/IPsrcaddr: only check notify and promotable when OCF_CHECK_LEVEL=10
+- iSCSILogicalUnit: fix issue where resource was in stopped state when using allowed_initiators parameter (#1766)
+- lvmlockd: add "use_lvmlockd = 1" if it's commented out or missing
+- lvmlockd: fail when use_lvmlockd has not been set
+- mariadb: remove obsolete DEBUG_LOG functionality #1191
+- mysql-common: return error in stop-action if kill fails to stop the process, so the node can get fenced
+- mysql-proxy: update metadata to suggest secure location instead of /tmp/mysql-proxy.sock
+- nfsserver: add nfsv4_only parameter to make it run without rpc-statd/rpcbind services
+- ocf-tester: remove deprecated lrmd/lrmadmin code that hasnt worked since pre-pacemaker days
+- ocf-tester: use promotable terms
+- openstack-agents: set domain parameter's default to Default and fix missing parameter name in ocf_exit_reason
+- openstack-agents: warn when openstackcli is slow
+- openstack-cinder-volume: dont do volume_local_check during start/stop-action
+- openstack-floating-ip/openstack-virtual-ip: dont fail in validate() during probe-calls
+- openstack-floating-ip: fix awk only catching last id for node_port_ids
+- oracle: improve the error message if monpassword was not set. (#1767)
+- podman: add podman parameter error judgment (#1764)
+- portblock: implement blocking of outgoing ports
+- rabbitmq-server-ha: dont mkdir -p when getting meta-data or help
+- storage_mon: use the O_DIRECT flag in open() to eliminate cache effects
+- storage_mon: do random lseek even with O_DIRECT, etc
+- storage_mon: fix bug in checking of number of specified scores.
+- storage_mon: fix build-related issues
+- storage_mon: improve error messages when ioctl() fails
+- storage_mon: make -h exit just after printing help message (#1791)
+- storage_mon: fix bug in handling of child process exit
+- vdo-vol: dont fail probe action when the underlying device doesnt exist
+
 * Wed Apr  6 2022 resource-agents contributors
 - stable release 4.11.0
 - Filesystem: fix logic for UUID/label devices with space between parameter and UUID/label

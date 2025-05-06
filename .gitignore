@@ -66,6 +66,8 @@ heartbeat/gcp-pd-move
 heartbeat/gcp-vpc-move-ip
 heartbeat/gcp-vpc-move-route
 heartbeat/gcp-vpc-move-vip
+heartbeat/ibm-cloud-vpc-cr-vip
+heartbeat/ibm-cloud-vpc-move-fip
 heartbeat/iSCSILogicalUnit
 heartbeat/iSCSITarget
 heartbeat/jira
@@ -77,6 +79,7 @@ heartbeat/mariadb
 heartbeat/mpathpersist
 heartbeat/nfsnotify
 heartbeat/openstack-info
+heartbeat/powervs-subnet
 heartbeat/rabbitmq-cluster
 heartbeat/redis
 heartbeat/rsyslog

@@ -29,7 +29,7 @@ prefixcheck() {
   fi
   return 0
 }
-getnetworkinfo()
+getloopbackinfo()
 {
   local line netinfo
   ip -o -f inet route list match $OCF_RESKEY_ip table local scope host | (while read line;
@@ -200,6 +200,8 @@ findif()
   local nic="$OCF_RESKEY_nic"
   local netmask="$OCF_RESKEY_cidr_netmask"
   local brdcast="$OCF_RESKEY_broadcast"
+  local metric
+  local routematch
 
   echo $match | grep -qs ":"
   if [ $? = 0 ] ; then
@@ -210,19 +212,28 @@ findif()
   fi
   findif_check_params $family || return $?
 
-  if [ -n "$netmask" ] ; then
+  if [ -n "$netmask" ]; then
       match=$match/$netmask
   fi
   if [ -n "$nic" ] ; then
     # NIC supports more than two.
-    set -- $(ip -o -f $family route list match $match $scope | grep "dev $nic " | awk 'BEGIN{best=0} /\// { mask=$1; sub(".*/", "", mask); if( int(mask)>=best ) { best=int(mask); best_ln=$0; } } END{print best_ln}')
+    routematch=$(ip -o -f $family route list match $match $proto $scope | grep -v "^\(unreachable\|prohibit\|blackhole\)" | grep "dev $nic " | sed -e 's,^\([0-9.]\+\) ,\1/32 ,;s,^\([0-9a-f:]\+\) ,\1/128 ,' | sort -t/ -k2,2nr)
   else
-    set -- $(ip -o -f $family route list match $match $scope | awk 'BEGIN{best=0} /\// { mask=$1; sub(".*/", "", mask); if( int(mask)>=best ) { best=int(mask); best_ln=$0; } } END{print best_ln}')
+    routematch=$(ip -o -f $family route list match $match $proto $scope | grep -v "^\(unreachable\|prohibit\|blackhole\)" | sed -e 's,^\([0-9.]\+\) ,\1/32 ,;s,^\([0-9a-f:]\+\) ,\1/128 ,' | sort -t/ -k2,2nr)
   fi
+  if [ "$family" = "inet6" ]; then
+    routematch=$(echo "$routematch" | grep -v "^default")
+  fi
+
+  if [ $(echo "$routematch" | wc -l) -gt 1 ]; then
+    ocf_exit_reason "More than 1 routes match $match. Unable to decide which route to use."
+    return $OCF_ERR_GENERIC
+  fi
+  set -- $routematch
   if [ $# = 0 ] ; then
     case $OCF_RESKEY_ip in
     127.*)
-      set -- `getnetworkinfo`
+      set -- `getloopbackinfo`
       shift;;
     esac
   fi
@@ -255,6 +266,7 @@ findif()
       return $OCF_ERR_GENERIC
     fi
   fi
-  echo "$nic netmask $netmask broadcast $brdcast"
+  metric=$(echo "$@" | sed "s/.*metric[[:blank:]]\([^ ]\+\).*/\1/")
+  echo "$nic netmask $netmask broadcast $brdcast metric $metric"
   return $OCF_SUCCESS
 }

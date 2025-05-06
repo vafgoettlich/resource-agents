@@ -43,27 +43,26 @@
 
 : ${OCF_FUNCTIONS_DIR=${OCF_ROOT}/lib/heartbeat}
 . ${OCF_FUNCTIONS_DIR}/ocf-shellfuncs
+. ${OCF_FUNCTIONS_DIR}/aws.sh
 
 # Defaults
 OCF_RESKEY_awscli_default="/usr/bin/aws"
+OCF_RESKEY_auth_type_default="key"
 OCF_RESKEY_profile_default="default"
+OCF_RESKEY_region_default=""
 OCF_RESKEY_hostedzoneid_default=""
 OCF_RESKEY_fullname_default=""
 OCF_RESKEY_ip_default="local"
 OCF_RESKEY_ttl_default=10
 
 : ${OCF_RESKEY_awscli=${OCF_RESKEY_awscli_default}}
+: ${OCF_RESKEY_auth_type=${OCF_RESKEY_auth_type_default}}
 : ${OCF_RESKEY_profile=${OCF_RESKEY_profile_default}}
+: ${OCF_RESKEY_region=${OCF_RESKEY_region_default}}
 : ${OCF_RESKEY_hostedzoneid:=${OCF_RESKEY_hostedzoneid_default}}
 : ${OCF_RESKEY_fullname:=${OCF_RESKEY_fullname_default}}
 : ${OCF_RESKEY_ip:=${OCF_RESKEY_ip_default}}
 : ${OCF_RESKEY_ttl:=${OCF_RESKEY_ttl_default}}
-#######################################################################
-
-
-AWS_PROFILE_OPT="--profile $OCF_RESKEY_profile --cli-connect-timeout 10"
-#######################################################################
-
 
 usage() {
 	cat <<-EOT
@@ -123,6 +122,15 @@ Path to command line tools for AWS
 <content type="string" default="${OCF_RESKEY_awscli_default}" />
 </parameter>
 
+<parameter name="auth_type">
+<longdesc lang="en">
+Authentication type "key" for AccessKey and SecretAccessKey set via "aws configure",
+or "role" to use AWS Policies.
+</longdesc>
+<shortdesc lang="en">Authentication type</shortdesc>
+<content type="string" default="${OCF_RESKEY_auth_type_default}" />
+</parameter>
+
 <parameter name="profile">
 <longdesc lang="en">
 The name of the AWS CLI profile of the root account. This
@@ -178,6 +186,22 @@ Time to live for Route53 ARECORD
 <shortdesc lang="en">ARECORD TTL</shortdesc>
 <content type="string" default="${OCF_RESKEY_ttl_default}" />
 </parameter>
+
+<parameter name="curl_retries" unique="0">
+<longdesc lang="en">
+curl retries before failing
+</longdesc>
+<shortdesc lang="en">curl retries</shortdesc>
+<content type="integer" default="${OCF_RESKEY_curl_retries_default}" />
+</parameter>
+
+<parameter name="curl_sleep" unique="0">
+<longdesc lang="en">
+curl sleep between tries
+</longdesc>
+<shortdesc lang="en">curl sleep</shortdesc>
+<content type="integer" default="${OCF_RESKEY_curl_sleep_default}" />
+</parameter>
 </parameters>
 
 <actions>
@@ -196,7 +220,7 @@ r53_validate() {
 
 	# Check for required binaries
 	ocf_log debug "Checking for required binaries"
-	for command in curl dig; do
+	for command in "${OCF_RESKEY_awscli}" curl dig; do
 		check_binary "$command"
 	done
 
@@ -216,7 +240,10 @@ r53_validate() {
 	esac
 
 	# profile
-	[[ -z "$OCF_RESKEY_profile" ]] && ocf_log error "AWS CLI profile not set $OCF_RESKEY_profile!" && exit $OCF_ERR_CONFIGURED
+	if [ "x${OCF_RESKEY_auth_type}" = "xkey" ] && [ -z "$OCF_RESKEY_profile" ]; then
+		ocf_exit_reason "profile parameter not set"
+		return $OCF_ERR_CONFIGURED
+	fi
 
 	# TTL
 	[[ -z "$OCF_RESKEY_ttl" ]] && ocf_log error "TTL not set $OCF_RESKEY_ttl!" && exit $OCF_ERR_CONFIGURED
@@ -347,8 +374,11 @@ r53_monitor() {
 _get_ip() {
 	case $OCF_RESKEY_ip in
 		local|public)
-			TOKEN=$(curl -sX PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600")
-			IPADDRESS=$(curl -s http://169.254.169.254/latest/meta-data/${OCF_RESKEY_ip}-ipv4 -H "X-aws-ec2-metadata-token: $TOKEN");;
+			TOKEN=$(get_token)
+			[ $? -ne 0 ] && exit $OCF_ERR_GENERIC
+			IPADDRESS=$(curl_retry "$OCF_RESKEY_curl_retries" "$OCF_RESKEY_curl_sleep" "--show-error -s -H 'X-aws-ec2-metadata-token: $TOKEN'" "http://169.254.169.254/latest/meta-data/${OCF_RESKEY_ip}-ipv4")
+			[ $? -ne 0 ] && exit $OCF_ERR_GENERIC
+			;;
 		*.*.*.*)
 			IPADDRESS="${OCF_RESKEY_ip}";;
 	esac
@@ -417,7 +447,6 @@ _update_record() {
 }
 
 ###############################################################################
-
 case $__OCF_ACTION in
 	usage|help)
 		usage
@@ -427,6 +456,26 @@ case $__OCF_ACTION in
 		metadata
 		exit $OCF_SUCCESS
 		;;
+esac
+
+AWSCLI_CMD="${OCF_RESKEY_awscli}"
+if [ "x${OCF_RESKEY_auth_type}" = "xkey" ]; then
+	AWSCLI_CMD="$AWSCLI_CMD --profile ${OCF_RESKEY_profile}"
+elif [ "x${OCF_RESKEY_auth_type}" = "xrole" ]; then
+	if [ -z "${OCF_RESKEY_region}" ]; then
+		ocf_exit_reason "region needs to be set when using role-based authentication"
+		exit $OCF_ERR_CONFIGURED
+	fi
+else
+	ocf_exit_reason "Incorrect auth_type: ${OCF_RESKEY_auth_type}"
+	exit $OCF_ERR_CONFIGURED
+fi
+if [ -n "${OCF_RESKEY_region}" ]; then
+	AWSCLI_CMD="$AWSCLI_CMD --region ${OCF_RESKEY_region}"
+fi
+AWSCLI_CMD="$AWSCLI_CMD --cli-connect-timeout 10"
+
+case $__OCF_ACTION in
 	start)
 		r53_validate || exit $?
 		r53_start

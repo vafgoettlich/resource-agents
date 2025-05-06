@@ -122,6 +122,7 @@ ocf_SCRIPTS	      = AoEtarget		\
 			iSCSITarget		\
 			ids			\
 			iface-bridge		\
+			iface-macvlan		\
 			iface-vlan		\
 			ipsec			\
 			iscsi			\
@@ -152,11 +153,13 @@ ocf_SCRIPTS	      = AoEtarget		\
 			oraasm			\
 			oracle			\
 			oralsnr			\
+			osceip			\
 			ovsmonitor		\
 			pgagent			\
 			pgsql			\
 			pingd			\
 			podman			\
+			podman-etcd		\
 			portblock		\
 			postfix			\
 			pound			\
@@ -204,6 +207,18 @@ if BUILD_GCP_VPC_MOVE_VIP
 ocf_SCRIPTS	     += gcp-vpc-move-vip
 endif
 
+if BUILD_POWERVS_SUBNET
+ocf_SCRIPTS	     += powervs-subnet
+endif
+
+if BUILD_IBM_CLOUD_VPC_MOVE_ROUTE
+ocf_SCRIPTS	     += ibm-cloud-vpc-cr-vip
+endif
+
+if BUILD_IBM_CLOUD_VPC_MOVE_FIP
+ocf_SCRIPTS	     += ibm-cloud-vpc-move-fip
+endif
+
 ocfcommondir		= $(OCF_LIB_DIR_PREFIX)/heartbeat
 ocfcommon_DATA		= ocf-shellfuncs 	\
 			  ocf-binaries	 	\
@@ -212,6 +227,7 @@ ocfcommon_DATA		= ocf-shellfuncs 	\
 			  ocf-rarun		\
 			  ocf-distro		\
 			  apache-conf.sh 	\
+			  aws.sh		\
 			  http-mon.sh		\
 			  sapdb-nosha.sh	\
 			  sapdb.sh		\
